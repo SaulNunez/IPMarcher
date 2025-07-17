@@ -100,8 +100,7 @@ static IPAddress ParseIpAddress(ArgumentResult result)
         return new IPAddress([192, 168, 0, 0]);
     }
 
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
-    if (!IPAddress.TryParse(result.Tokens.Single().Value, out IPAddress iPAddress))
+    if (IPAddress.TryParse(result.Tokens.Single().Value, out IPAddress iPAddress))
     {
         return iPAddress;
     }
@@ -109,7 +108,6 @@ static IPAddress ParseIpAddress(ArgumentResult result)
     {
         result.AddError($"{result.Tokens.Single().Value} is not a valid IP Adress");
     }
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
 
     return IPAddress.None;
 }

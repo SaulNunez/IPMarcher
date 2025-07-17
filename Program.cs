@@ -21,7 +21,7 @@ Option<IPAddress> startIp = new("--ip-start", "-s")
     CustomParser = ParseIpAddress
 };
 
-Option<IPAddress> endIp = new("--ip-end", "-s")
+Option<IPAddress> endIp = new("--ip-end", "-e")
 {
     Description = "Start of IP range to check.",
     DefaultValueFactory = parseResult => new IPAddress([192, 168, 0, 254]),

@@ -18,14 +18,14 @@ Option<int[]> portOption = new("--port", "-p")
 Option<IPAddress> startIp = new("--ip-start", "-s")
 {
     Description = "Start of IP range to check.",
-    DefaultValueFactory = parseResult => new IPAddress([192, 168, 0, 0]),
+    DefaultValueFactory = parseResult => new IPAddress([192, 168, 1, 0]),
     CustomParser = ParseIpAddress
 };
 
 Option<IPAddress> endIp = new("--ip-end", "-e")
 {
     Description = "Start of IP range to check.",
-    DefaultValueFactory = parseResult => new IPAddress([192, 168, 0, 254]),
+    DefaultValueFactory = parseResult => new IPAddress([192, 168, 1, 254]),
     CustomParser = ParseIpAddress
 };
 

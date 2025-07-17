@@ -70,11 +70,11 @@ var rangeCheck = range.Select(async ip =>
 
 var results = await Task.WhenAll(rangeCheck);
 
-
+Console.WriteLine($"IP Address\tHostname\tOpen ports\tIs Active");
 foreach (var result in results)
 {
     var openPortsConcat = string.Join(",", result.OpenPorts);
-    Console.WriteLine($"{result.IpAddress}\t{result.Hostname}\t{openPortsConcat}\t{result.IsOnline}");
+    Console.WriteLine($"{result.IpAddress}\t{result.Hostname}\t{openPortsConcat}\t\t{result.IsOnline}");
 }
 
 static async Task<bool> IsPortOpenAsync(IPAddress ip, int port, TimeSpan timeout)

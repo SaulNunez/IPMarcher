@@ -10,7 +10,7 @@ using IPMarcher.Utils;
 Option<int[]> portOption = new("--port", "-p")
 {
     Description = "Port to check.",
-    DefaultValueFactory = parseResult => 22,
+    DefaultValueFactory = parseResult => [80, 443],
     Arity = ArgumentArity.OneOrMore,
     AllowMultipleArgumentsPerToken = true
 };

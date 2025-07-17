@@ -1,12 +1,13 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using IPMarcher;
 using IPMarcher.Utils;
 
 
-Option<int> portOption = new("--port", "-p")
+Option<int[]> portOption = new("--port", "-p")
 {
     Description = "Port to check.",
     DefaultValueFactory = parseResult => 22,
@@ -44,29 +45,36 @@ ParseResult parseResult = rootCommand.Parse(args);
 
 IPAddress start = parseResult.GetValue(startIp);
 IPAddress end = parseResult.GetValue(endIp);
-int ports = parseResult.GetValue(portOption);
+var ports = parseResult.GetValue(portOption);
 int timeout = parseResult.GetValue(timeoutOption);
 
 var range = new IPRange(start, end);
-
-List<HostInformation> results = [];
-foreach (var ip in range)
+var rangeCheck = range.Select(async ip =>
 {
-    var port = await IsPortOpenAsync(ip, ports, TimeSpan.FromSeconds(timeout));
-    var hostname = (await GetHostNameAsync(ip)) ?? string.Empty;
-
-    List<int> openPorts = [];
-    if (port)
+    var hostname = string.Empty;
+    int[] openPorts = [];
+    var hostIsOnline = await IsHostOnlineAsync(ip);
+    if (hostIsOnline)
     {
-        openPorts.Add(22);
+        var results = await Task.WhenAll(ports.Select(async port =>
+        {
+            var isPortOpen = await IsPortOpenAsync(ip, port, TimeSpan.FromSeconds(timeout));
+            return (port, isPortOpen);
+        }));
+        openPorts = results.Where(x => x.isPortOpen).Select(x => x.port).ToArray();
+        hostname = (await GetHostNameAsync(ip)) ?? string.Empty;
     }
 
-    results.Add(new HostInformation(ip, hostname, [.. openPorts]));
-}
+    return new HostInformation(ip, hostname, [.. openPorts], hostIsOnline);
+}).ToArray();
+
+var results = await Task.WhenAll(rangeCheck);
+
 
 foreach (var result in results)
 {
-    Console.WriteLine($"{result.IpAddress}\t{result.Hostname}\t{result.OpenPorts}");
+    var openPortsConcat = string.Join(",", result.OpenPorts);
+    Console.WriteLine($"{result.IpAddress}\t{result.Hostname}\t{openPortsConcat}\t{result.IsOnline}");
 }
 
 static async Task<bool> IsPortOpenAsync(IPAddress ip, int port, TimeSpan timeout)
@@ -110,4 +118,18 @@ static IPAddress ParseIpAddress(ArgumentResult result)
     }
 
     return IPAddress.None;
+}
+
+static async Task<bool> IsHostOnlineAsync(IPAddress host, int timeoutMs = 1000)
+{
+    try
+    {
+        using var ping = new Ping();
+        PingReply reply = await ping.SendPingAsync(host, timeoutMs);
+        return reply.Status == IPStatus.Success;
+    }
+    catch
+    {
+        return false;
+    }
 }
